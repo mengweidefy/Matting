@@ -90,16 +90,18 @@ class Matting {
     let reader = new FileReader();
     let ext = this.file.name.substring(this.file.name.lastIndexOf(".") + 1).toLowerCase();
     if (ext != 'png' && ext != 'jpg' && ext != 'jpeg') {
-      alert("图片的格式必须为png或者jpg或者jpeg格式！");
+      console.log(this.file.name+"图片的格式必须为png或者jpg或者jpeg格式！");
       return;
     }
     reader.onload = e => {
       let src = e.target.result;
       let img = new Image();
       img.src = src;
-      let w = img.width;
-      let h = img.height;
-      this.fitch(w, h, img);
+      img.onload=()=>{
+        let w = img.width;
+        let h = img.height;
+        this.fitch(w, h, img);
+      }
     };
     reader.readAsDataURL(this.file);
   }
@@ -130,11 +132,17 @@ class Matting {
     imgdata.sort();
     // 目前只支持纯色背景抠图，简单的判断是否为纯色
     let deferNum = this.unique(imgdata).length;
+    //let deferNum=1;
     if (deferNum <= 1) {
       {
         selfImageData = imgdata[1].split(","); // 设置要扣除的主题色
         let isPNG = true; // 判断是否已经扣过
-        let imgDataUrl = ctx.getImageData(0, 0, width, height); //获取像素点
+        let imgDataUrl;
+        try{
+          imgDataUrl= ctx.getImageData(0, 0, width, height); //获取像素点
+        }catch(ex){
+          console.log(this.file.name+"读取图片尺寸失败");
+        }
         let data = imgDataUrl.data;
         for (let i = 0; i < data.length; i += 4) {
           // 得到 RGBA 通道的值
@@ -170,14 +178,14 @@ class Matting {
            */
           let a = document.createElement('a');
           a.href = dataUrl; //下载图片
-          a.download = '未命名.png';
+          a.download = this.file.name.substring(0,this.file.name.lastIndexOf("."))+".png";//'未命名.png';
           a.click();
         } else {
-          alert('背景已抠除！');
+          console.log(this.file.name+'背景已抠除！');
         }
       }
     } else {
-      alert('只支持纯色背景抠图！');
+      console.log(this.file.name+'只支持纯色背景抠图！');
     }
   }
 
